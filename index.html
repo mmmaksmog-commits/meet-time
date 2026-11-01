@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Общее время — когда удобно всем</title>
+  <meta name="description" content="Каждый отмечает свободные часы и передаёт ссылку дальше. Приложение находит время, когда удобно всем. Без регистрации и сервера.">
+  <meta name="theme-color" content="#f5f3ff">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗓️</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg: #f5f3ff; --card: #fff; --ink: #1e1b3a; --muted: #6f6a93; --line: #e6e2fb; --acc: #6d4cff; --acc2: #ede8ff; --mine: #22c55e; color-scheme: light; }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 Onest, system-ui, sans-serif; }
+    button, input, select { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    .app { max-width: 1000px; margin: 0 auto; padding: calc(20px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom)); }
+    h1 { margin: 0 0 6px; font-size: clamp(26px, 7vw, 36px); font-weight: 800; letter-spacing: -0.02em; }
+    .sub { margin: 0 0 18px; color: var(--muted); }
+    .card { padding: 20px; border-radius: 22px; background: var(--card); border: 1px solid var(--line); min-width: 0; }
+    .steps { display: grid; gap: 10px; margin: 18px 0; padding: 0; list-style: none; counter-reset: s; }
+    .steps li { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; counter-increment: s; }
+    .steps li::before { content: counter(s); display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--acc2); color: var(--acc); font-weight: 800; font-size: 14px; }
+    form { display: grid; gap: 12px; }
+    label { display: grid; gap: 4px; font-size: 13px; font-weight: 700; color: var(--muted); }
+    input, select { width: 100%; min-width: 0; max-width: 100%; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 12px; background: #fcfbff; font-size: 16px; outline: none; }
+    input:focus, select:focus { border-color: var(--acc); }
+    .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 10px; }
+    .btn { padding: 13px 18px; border: 0; border-radius: 14px; background: var(--acc); color: #fff; font-weight: 800; }
+    .btn--ghost { background: transparent; border: 1.5px solid var(--line); color: var(--ink); }
+    .head { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+    .head h1 { flex: 1; min-width: 200px; }
+    .people { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .people span { padding: 5px 10px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-weight: 600; font-size: 13px; }
+    .people span.me { border-color: var(--mine); color: #15803d; }
+    .layout { display: grid; gap: 14px; }
+    @media (min-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr) 300px; align-items: start; } }
+    .tabs { display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--acc2); margin-bottom: 12px; }
+    .tabs button { flex: 1; padding: 9px; border: 0; border-radius: 10px; background: transparent; font-weight: 700; color: var(--muted); }
+    .tabs button.on { background: #fff; color: var(--ink); box-shadow: 0 1px 4px rgba(30, 27, 58, 0.1); }
+    .me-name { display: flex; gap: 8px; margin-bottom: 12px; }
+    .gridwrap { overflow-x: auto; margin: 0 -4px; padding: 0 4px; }
+    .grid { display: grid; gap: 2px; user-select: none; -webkit-user-select: none; touch-action: none; min-width: 100%; }
+    .grid .dh { position: sticky; top: 0; padding: 4px 2px 8px; text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); line-height: 1.2; }
+    .grid .dh b { display: block; color: var(--ink); font-size: 14px; }
+    .grid .th { padding-right: 6px; font-size: 11px; color: var(--muted); text-align: right; transform: translateY(-7px); font-weight: 600; }
+    .slot { height: 18px; border-radius: 3px; background: #f1eefc; }
+    .slot.half { margin-bottom: 2px; }
+    .slot.on { background: var(--mine); }
+    .grid.heat .slot { cursor: help; }
+    .best { display: grid; gap: 8px; }
+    .best div { padding: 12px 14px; border-radius: 14px; background: var(--acc2); }
+    .best b { display: block; }
+    .best small { color: var(--muted); }
+    .legend { display: flex; align-items: center; gap: 4px; margin-top: 12px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+    .legend i { width: 16px; height: 12px; border-radius: 3px; display: inline-block; }
+    .tip { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+    .hover { min-height: 40px; margin-top: 10px; font-size: 13px; color: var(--muted); }
+    .share { display: grid; gap: 8px; margin-top: 14px; }
+    .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); max-width: calc(100% - 32px); padding: 12px 18px; border-radius: 14px; background: var(--ink); color: #fff; font-weight: 700; opacity: 0; transition: opacity 0.2s; pointer-events: none; text-align: center; }
+    .toast.show { opacity: 1; }
+    .back { display: inline-block; margin-top: 18px; color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="toast" id="toast"></div>
+<script>
+(() => {
+  const app = document.getElementById('app');
+  const WD = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const pd = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+  const b64e = (str) => btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const b64d = (str) => decodeURIComponent(escape(atob(str.replace(/-/g, '+').replace(/_/g, '/'))));
+  // занятость хранится битами: 1 слот = 30 минут
+  const bitsToStr = (arr) => { const bytes = new Uint8Array(Math.ceil(arr.length / 8)); arr.forEach((v, i) => { if (v) bytes[i >> 3] |= 1 << (i & 7); }); return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+  const strToBits = (s, n) => { const bin = atob(s.replace(/-/g, '+').replace(/_/g, '/')); return Array.from({ length: n }, (_, i) => (bin.charCodeAt(i >> 3) >> (i & 7)) & 1); };
+
+  let E = null, mine = [], tab = 'mine', myName = '';
+  try { myName = localStorage.getItem('meet-name') || ''; } catch {}
+
+  function readHash() {
+    if (!location.hash.startsWith('#e=')) return null;
+    try { return JSON.parse(b64d(location.hash.slice(3))); } catch { return null; }
+  }
+  const slotsPerDay = () => (E.to - E.from) * 2;
+  const total = () => E.days * slotsPerDay();
+  const slotTime = (s) => { const m = E.from * 60 + s * 30; return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`; };
+  const dayDate = (d) => { const x = pd(E.start); x.setDate(x.getDate() + d); return x; };
+  const people = () => E.p.map((x) => ({ n: x.n, bits: strToBits(x.b, total()) }));
+
+  // ---------- Создание ----------
+  function createScreen() {
+    const t = new Date(); t.setDate(t.getDate() + 1);
+    app.innerHTML = `<h1>🗓️ Общее время</h1>
+      <p class="sub">Найдите время для встречи, созвона или тренировки без бесконечной переписки в чате.</p>
+      <div class="card">
+        <form id="create">
+          <label>Что планируем<input name="t" required maxlength="60" placeholder="Например: ужин с одноклассниками"></label>
+          <div class="row">
+            <label>С какого дня<input type="date" name="start" value="${iso(t)}" required></label>
+            <label>Сколько дней<select name="days">${[1, 2, 3, 4, 5, 6, 7].map((n) => `<option ${n === 5 ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+            <label>С<select name="from">${Array.from({ length: 17 }, (_, i) => i + 6).map((h) => `<option value="${h}" ${h === 9 ? 'selected' : ''}>${h}:00</option>`).join('')}</select></label>
+            <label>До<select name="to">${Array.from({ length: 17 }, (_, i) => i + 8).map((h) => `<option value="${h}" ${h === 22 ? 'selected' : ''}>${h === 24 ? '24:00' : h + ':00'}</option>`).join('')}</select></label>
+          </div>
+          <button class="btn">Создать и отметить свои часы</button>
+        </form>
+        <ol class="steps">
+          <li>Создайте событие и закрасьте часы, когда вам удобно.</li>
+          <li>Отправьте ссылку в чат или следующему участнику.</li>
+          <li>Каждый добавляет свои часы и пересылает обновлённую ссылку дальше.</li>
+          <li>Тёмные клетки — время, когда свободно больше всего людей.</li>
+        </ol>
+        <p class="tip">🔒 Всё хранится прямо в ссылке: ни регистрации, ни сервера.</p>
+      </div>
+      <a class="back" href="/">← Портфолио</a>`;
+    document.getElementById('create').onsubmit = (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const from = +f.from.value, to = +f.to.value;
+      if (to <= from) return toast('Время «до» должно быть позже, чем «с»');
+      E = { t: f.t.value.trim(), start: f.start.value, days: +f.days.value, from, to, p: [] };
+      mine = Array(total()).fill(0); tab = 'mine';
+      updateHash(); eventScreen();
+    };
+  }
+
+  function updateHash() { history.replaceState(null, '', `${location.pathname}#e=${b64e(JSON.stringify(E))}`); }
+
+  // ---------- Событие ----------
+  function eventScreen() {
+    const ps = people();
+    const meIdx = myName ? E.p.findIndex((x) => x.n.toLowerCase() === myName.toLowerCase()) : -1;
+    if (meIdx >= 0 && !mine.some(Boolean)) mine = ps[meIdx].bits.slice();
+    const d0 = dayDate(0), d1 = dayDate(E.days - 1);
+    app.innerHTML = `<div class="head"><h1>${esc(E.t)}</h1><button class="btn btn--ghost" id="new">+ Новое</button></div>
+      <p class="sub">${d0.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}${E.days > 1 ? ' — ' + d1.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) : ''} · с ${E.from}:00 до ${E.to}:00</p>
+      <div class="people">${E.p.length ? E.p.map((x) => `<span class="${x.n.toLowerCase() === myName.toLowerCase() ? 'me' : ''}">${esc(x.n)}</span>`).join('') : '<span>Пока никто не отметился</span>'}</div>
+      <div class="layout">
+        <section class="card">
+          <div class="tabs"><button data-tab="mine" class="${tab === 'mine' ? 'on' : ''}">✋ Мои часы</button><button data-tab="all" class="${tab === 'all' ? 'on' : ''}">👥 Общая картина</button></div>
+          ${tab === 'mine' ? `<div class="me-name"><input id="me" placeholder="Ваше имя" maxlength="20" value="${esc(myName)}"></div>` : ''}
+          <div class="gridwrap"><div class="grid ${tab === 'all' ? 'heat' : ''}" id="grid"></div></div>
+          ${tab === 'mine' ? '<p class="tip">Проведите пальцем или мышью по клеткам, когда вам удобно. Повторное касание снимает отметку.</p>' : `<div class="legend">0 <i style="background:#f1eefc"></i>${ps.map((_, i) => `<i style="background:${heat((i + 1) / ps.length)}"></i>`).join('')} ${ps.length} чел.</div><div class="hover" id="hover">Наведите на клетку или коснитесь её, чтобы увидеть, кто свободен.</div>`}
+        </section>
+        <aside class="card">
+          <h3 style="margin:0 0 10px">⭐ Лучшее время</h3>
+          <div class="best" id="best"></div>
+          <div class="share">
+            <button class="btn" id="share">${tab === 'mine' ? 'Сохранить и поделиться' : 'Поделиться ссылкой'}</button>
+            <p class="tip" style="margin:0">Перешлите ссылку следующему участнику — каждый добавит свои часы в ту же ссылку.</p>
+          </div>
+        </aside>
+      </div>
+      <a class="back" href="/">← Портфолио</a>`;
+    app.querySelectorAll('[data-tab]').forEach((b) => b.onclick = () => { commit(false); tab = b.dataset.tab; eventScreen(); });
+    document.getElementById('new').onclick = () => { history.replaceState(null, '', location.pathname); E = null; createScreen(); };
+    document.getElementById('share').onclick = share;
+    const me = document.getElementById('me');
+    if (me) me.oninput = () => { myName = me.value.trim(); try { localStorage.setItem('meet-name', myName); } catch {} drawBest(); };
+    drawGrid(); drawBest();
+  }
+
+  const heat = (k) => `hsl(${255 - k * 10} ${60 + k * 30}% ${92 - k * 52}%)`;
+
+  function drawGrid() {
+    const g = document.getElementById('grid');
+    const spd = slotsPerDay(), ps = people(), n = ps.length;
+    const counts = Array(total()).fill(0);
+    ps.forEach((p) => p.bits.forEach((v, i) => (counts[i] += v)));
+    g.style.gridTemplateColumns = `40px repeat(${E.days}, minmax(46px, 1fr))`;
+    let html = '<span></span>';
+    for (let d = 0; d < E.days; d++) { const x = dayDate(d); html += `<span class="dh">${WD[x.getDay()]}<b>${x.getDate()}</b></span>`; }
+    for (let s = 0; s < spd; s++) {
+      html += `<span class="th">${s % 2 === 0 ? slotTime(s) : ''}</span>`;
+      for (let d = 0; d < E.days; d++) {
+        const i = d * spd + s;
+        if (tab === 'mine') html += `<span class="slot ${s % 2 ? 'half' : ''} ${mine[i] ? 'on' : ''}" data-i="${i}"></span>`;
+        else html += `<span class="slot ${s % 2 ? 'half' : ''}" data-i="${i}" style="${counts[i] ? `background:${heat(counts[i] / Math.max(1, n))}` : ''}"></span>`;
+      }
+    }
+    g.innerHTML = html;
+    if (tab === 'mine') paintable(g); else hoverable(g, ps);
+  }
+
+  // рисование по сетке: тянем и закрашиваем, повторный проход стирает
+  let painting = false, value = 1;
+  addEventListener('pointerup', () => { if (painting) { painting = false; drawBest(); } });
+  function paintable(g) {
+    const at = (e) => { const el = document.elementFromPoint(e.clientX, e.clientY); return el && el.dataset && el.dataset.i !== undefined && g.contains(el) ? el : null; };
+    g.addEventListener('pointerdown', (e) => {
+      const el = at(e); if (!el) return;
+      e.preventDefault(); painting = true;
+      value = mine[+el.dataset.i] ? 0 : 1;
+      set(el);
+    });
+    g.addEventListener('pointermove', (e) => { if (painting) { const el = at(e); if (el) set(el); } });
+    function set(el) { mine[+el.dataset.i] = value; el.classList.toggle('on', !!value); }
+  }
+  function hoverable(g, ps) {
+    const show = (e) => {
+      const el = e.target.closest('[data-i]'); if (!el) return;
+      const i = +el.dataset.i, spd = slotsPerDay(), d = Math.floor(i / spd), s = i % spd;
+      const free = ps.filter((p) => p.bits[i]).map((p) => p.n), busy = ps.filter((p) => !p.bits[i]).map((p) => p.n);
+      document.getElementById('hover').innerHTML = `<b>${dayDate(d).toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' })}, ${slotTime(s)}–${slotTime(s + 1)}</b><br>✅ ${free.length ? free.map(esc).join(', ') : 'никто'}${busy.length ? `<br>❌ ${busy.map(esc).join(', ')}` : ''}`;
+    };
+    g.addEventListener('pointerover', show); g.addEventListener('pointerdown', show);
+  }
+
+  // лучшие окна: непрерывные отрезки от часа, где свободно максимум людей
+  function drawBest() {
+    const ps = people();
+    const meIncluded = tab === 'mine' && myName && mine.some(Boolean);
+    const all = meIncluded ? [...ps.filter((p) => p.n.toLowerCase() !== myName.toLowerCase()), { n: myName, bits: mine }] : ps;
+    const box = document.getElementById('best');
+    if (!all.length) { box.innerHTML = '<p class="tip" style="margin:0">Отметьте свои часы — и отправьте ссылку остальным.</p>'; return; }
+    const spd = slotsPerDay(), windows = [];
+    for (let d = 0; d < E.days; d++) {
+      let s = 0;
+      while (s < spd) {
+        const who = (i) => all.filter((p) => p.bits[d * spd + i]).map((p) => p.n).sort().join('|');
+        const key = who(s);
+        if (!key) { s++; continue; }
+        let e = s; while (e + 1 < spd && who(e + 1) === key) e++;
+        if (e - s + 1 >= 2) windows.push({ d, s, e: e + 1, names: key.split('|') });
+        s = e + 1;
+      }
+    }
+    windows.sort((a, b) => b.names.length - a.names.length || (b.e - b.s) - (a.e - a.s));
+    box.innerHTML = windows.length ? windows.slice(0, 5).map((w) => `<div><b>${dayDate(w.d).toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'short' })}, ${slotTime(w.s)}–${slotTime(w.e)}</b><small>${w.names.length === all.length ? `✅ Удобно всем (${all.length})` : `${w.names.length} из ${all.length}: ${w.names.map(esc).join(', ')}`}</small></div>`).join('')
+      : '<p class="tip" style="margin:0">Пока нет окон длиннее часа, где кто-то свободен.</p>';
+  }
+
+  function commit(requireName) {
+    if (tab !== 'mine' || !E) return true;
+    if (!mine.some(Boolean)) return true;
+    if (!myName) { if (requireName) { toast('Впишите своё имя, чтобы другие видели, чьи это часы'); document.getElementById('me')?.focus(); } return false; }
+    const entry = { n: myName, b: bitsToStr(mine) };
+    const i = E.p.findIndex((x) => x.n.toLowerCase() === myName.toLowerCase());
+    if (i >= 0) E.p[i] = entry; else E.p.push(entry);
+    updateHash(); return true;
+  }
+  async function share() {
+    if (!commit(true)) return;
+    eventScreen();
+    const url = location.href;
+    const text = `${E.t}: отметь, когда тебе удобно 👇`;
+    if (navigator.share && matchMedia('(pointer: coarse)').matches) { try { await navigator.share({ title: E.t, text, url }); return; } catch {} }
+    try { await navigator.clipboard.writeText(url); toast('Ссылка скопирована — отправьте её в чат'); } catch { prompt('Скопируйте ссылку:', url); }
+  }
+  let tt; function toast(t) { const el = document.getElementById('toast'); el.textContent = t; el.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => el.classList.remove('show'), 2600); }
+
+  E = readHash();
+  if (E) { mine = Array(total()).fill(0); tab = 'mine'; eventScreen(); }
+  else createScreen();
+})();
+</script>
+</body>
+</html>
